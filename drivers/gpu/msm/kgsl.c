@@ -3768,8 +3768,6 @@ static long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 	    || !memcmp(current->comm, "GLThread", 8) || !memcmp(current->comm, "Thread", 6))
         && memcmp(current->group_leader->comm, "system_server", 13))
         {
-            if(governor_dynamic)
-                current->group_leader->game_flag = PROCESS_MAIN_THREAD;
             current->game_flag = PROCESS_RENDER_THREAD;
         }
 
