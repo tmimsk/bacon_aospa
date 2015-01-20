@@ -433,6 +433,10 @@ static void cpufreq_interactive_timer(unsigned long data)
 #ifdef VENDOR_EDIT
 	__cpufreq_boost_hint_rem(data);
 #endif
+
+
+	cpufreq_notify_utilization(pcpu->policy, cpu_load);
+
 	if (cpu_load >= go_hispeed_load || boosted) {
 		if (pcpu->target_freq < hispeed_freq) {
 			new_freq = hispeed_freq;
