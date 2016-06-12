@@ -502,7 +502,6 @@ static int kgsl_pwrctrl_idle_timer_store(struct device *dev,
 
 	if (device == NULL)
 		return 0;
-	pwr = &device->pwrctrl;
 
 	ret = kgsl_sysfs_store(buf, &val);
 	if (ret)
@@ -512,7 +511,6 @@ static int kgsl_pwrctrl_idle_timer_store(struct device *dev,
 
 	/* Let the timeout be requested in ms, but convert to jiffies. */
 	val /= div;
-	pwr->interval_timeout = val;
 
 	kgsl_mutex_unlock(&device->mutex, &device->mutex_owner);
 
