@@ -1700,8 +1700,16 @@ static void throttle_cfs_rq(struct cfs_rq *cfs_rq)
 	cfs_rq->throttled = 1;
 	cfs_rq->throttled_timestamp = rq->clock;
 	raw_spin_lock(&cfs_b->lock);
-
-	list_add_tail_rcu(&cfs_rq->throttled_list, &cfs_b->throttled_cfs_rq);
+	/*
+	 * Add to the _head_ of the list, so that an already-started
+	 * distribute_cfs_runtime will not see us
+	 */
+	list_add_rcu(&cfs_rq->throttled_list, &cfs_b->throttled_cfs_rq);
+#ifdef VENDOR_EDIT
+	list_del_rcu(&cfs_rq->unthrottled_list);
+#endif
+	if (!cfs_b->timer_active)
+		__start_cfs_bandwidth(cfs_b, false);
 	raw_spin_unlock(&cfs_b->lock);
 }
 
@@ -1811,9 +1819,12 @@ static int do_sched_cfs_period_timer(struct cfs_bandwidth *cfs_b, int overrun)
 	throttled = !list_empty(&cfs_b->throttled_cfs_rq);
 	cfs_b->nr_periods += overrun;
 
-	/* if we're going inactive then everything else can be deferred */
-	if (idle)
-		goto out_unlock;
+	/*
+	 * idle depends on !throttled (for the case of a large deficit), and if
+	 * we're going inactive then everything else can be deferred
+	 */
+	if (cfs_b->idle && !throttled)
+		goto out_deactivate;
 
 	__refill_cfs_bandwidth_runtime(cfs_b);
 
@@ -1950,8 +1961,7 @@ static void do_sched_cfs_slack_timer(struct cfs_bandwidth *cfs_b)
 		return;
 
 	raw_spin_lock(&cfs_b->lock);
-
-	if (cfs_b->quota != RUNTIME_INF && cfs_b->runtime > slice) {
+	if (cfs_b->quota != RUNTIME_INF && cfs_b->runtime > slice)
 		runtime = cfs_b->runtime;
 
 	expires = cfs_b->runtime_expires;
@@ -4608,6 +4618,11 @@ static int load_balance(int this_cpu, struct rq *this_rq,
 	struct rq *busiest = NULL;
 	unsigned long flags;
 	struct cpumask *cpus = __get_cpu_var(load_balance_tmpmask);
+#ifdef VENDOR_EDIT
+//add by huruihuan for tradeoff performence and power
+    int game_flag = 0;
+    int game_probe = 0;
+#endif
 
 	struct lb_env env = {
 		.sd		= sd,
@@ -4662,7 +4677,13 @@ more_balance:
 		double_rq_lock(this_rq, busiest);
 		if (!env.loop)
 			update_h_load(env.src_cpu);
-		ld_moved += move_tasks(&env);
+#ifdef VENDOR_EDIT
+//add by huruihuan for tradeoff performence and power
+        ld_moved += move_tasks(&env, &game_probe);
+        game_flag |= game_probe;
+#else
+        ld_moved += move_tasks(&env);
+#endif
 		double_rq_unlock(this_rq, busiest);
 		local_irq_restore(flags);
 
@@ -4739,9 +4760,24 @@ more_balance:
 		sd->nr_balance_failed = 0;
 		if (per_cpu(dbs_boost_needed, this_cpu)) {
 			per_cpu(dbs_boost_needed, this_cpu) = false;
-			atomic_notifier_call_chain(&migration_notifier_head,
-						   this_cpu,
-						   (void *)cpu_of(busiest));
+#ifdef VENDOR_EDIT
+//add by huruihuan for tradeoff performence and power 
+            if(boost_game_only) {
+                if(game_flag){
+                    atomic_notifier_call_chain(&migration_notifier_head,
+                                   this_cpu,
+                                   (void *)cpu_of(busiest));
+                }
+            }
+            else
+                atomic_notifier_call_chain(&migration_notifier_head,
+                               this_cpu,
+                               (void *)cpu_of(busiest));
+#else
+            atomic_notifier_call_chain(&migration_notifier_head,
+                           this_cpu,
+                           (void *)cpu_of(busiest));
+#endif
 		}
 	}
 	if (likely(!active_balance)) {
@@ -4930,9 +4966,24 @@ out_unlock:
 	raw_spin_unlock_irq(&busiest_rq->lock);
 	if (per_cpu(dbs_boost_needed, target_cpu)) {
 		per_cpu(dbs_boost_needed, target_cpu) = false;
+#ifdef VENDOR_EDIT
+//add by huruihuan for tradeoff performence and power
+    if(boost_game_only) {
+        if(game_flag) 
+            atomic_notifier_call_chain(&migration_notifier_head,
+                           target_cpu,
+                           (void *)cpu_of(busiest_rq));
+    }
+    else
+        atomic_notifier_call_chain(&migration_notifier_head,
+                       target_cpu,
+                       (void *)cpu_of(busiest_rq));
+
+#else
 		atomic_notifier_call_chain(&migration_notifier_head,
 					   target_cpu,
 					   (void *)cpu_of(busiest_rq));
+#endif
 	}
 	return 0;
 }
