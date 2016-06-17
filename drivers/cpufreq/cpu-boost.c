@@ -48,15 +48,6 @@ static struct work_struct input_boost_work;
 static unsigned int boost_ms;
 module_param(boost_ms, uint, 0644);
 
-#ifdef VENDOR_EDIT
-//add by huruihuan for tradeoff performence and power
-unsigned int boost_game_only;
-module_param(boost_game_only, uint, 0644);
-
-unsigned int governor_dynamic;
-module_param(governor_dynamic, uint, 0644);
-#endif
-
 static unsigned int sync_threshold;
 module_param(sync_threshold, uint, 0644);
 
@@ -65,11 +56,6 @@ module_param(input_boost_freq, uint, 0644);
 
 static unsigned int input_boost_ms = 40;
 module_param(input_boost_ms, uint, 0644);
-
-#ifdef VENDOR_EDIT
-static unsigned int workload_boost = 1;
-module_param(workload_boost, uint, 0644);
-#endif
 
 static u64 last_input_time;
 #define MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
@@ -96,23 +82,6 @@ static int boost_adjust_notify(struct notifier_block *nb, unsigned long val, voi
 
 	switch (val) {
 	case CPUFREQ_ADJUST:
-#ifdef VENDOR_EDIT
-		if (b_min) {
-			if (workload_boost) {
-				min = cpufreq_update_wb_hint(policy);
-				if (!min)
-					pr_debug("[cpu_boost] No workload\n");
-				else if (min == 1) {
-					b_min = 0;
-					pr_debug("[cpu_boost] Boost no need\n");
-				} else {
-					pr_debug("WBH: min(%u, %u)\n",
-							b_min, min);
-					b_min = min(b_min, min);
-				}
-			}
-		}
-#endif
 		if (!b_min && !ib_min)
 			break;
 
