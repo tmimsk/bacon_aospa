@@ -48,6 +48,15 @@ static struct work_struct input_boost_work;
 static unsigned int boost_ms;
 module_param(boost_ms, uint, 0644);
 
+#ifdef VENDOR_EDIT
+//add by huruihuan for tradeoff performence and power
+unsigned int boost_game_only;
+module_param(boost_game_only, uint, 0644);
+
+unsigned int governor_dynamic;
+module_param(governor_dynamic, uint, 0644);
+#endif
+
 static unsigned int sync_threshold;
 module_param(sync_threshold, uint, 0644);
 
