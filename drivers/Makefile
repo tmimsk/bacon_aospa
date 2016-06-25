@@ -154,6 +154,3 @@ obj-y 	+= param_read_write/
 #hefaxi@filesystems, 2015/07/03, add for force dump function
 obj-$(CONFIG_OEM_FORCE_DUMP) 	+= oem_debug/
 #endif
-obj-y += backoff/
-
-obj-$(CONFIG_CPUQUIET_FRAMEWORK)		+= cpuquiet/

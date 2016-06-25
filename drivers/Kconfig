@@ -164,6 +164,4 @@ source "drivers/param_read_write/Kconfig"
 source "drivers/oem_debug/Kconfig"
 #endif
 
-source "drivers/cpuquiet/Kconfig"
-
 endmenu
