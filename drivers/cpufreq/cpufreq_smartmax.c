@@ -40,6 +40,7 @@
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
 
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
@@ -59,16 +60,12 @@ extern int tegra_input_boost (struct cpufreq_policy *policy,
  */
 
 
-#ifdef CONFIG_CPU_FREQ_GOV_SMARTMAX_ENRC2B
-#define DEFAULT_SUSPEND_IDEAL_FREQ 475000
-#define DEFAULT_AWAKE_IDEAL_FREQ 475000
-#define DEFAULT_RAMP_UP_STEP 300000
-#define DEFAULT_RAMP_DOWN_STEP 150000
 #define DEFAULT_MAX_CPU_LOAD 80
 #define DEFAULT_MIN_CPU_LOAD 50
 #define DEFAULT_UP_RATE 30000
 #define DEFAULT_DOWN_RATE 60000
 #define DEFAULT_SAMPLING_RATE 30000
+
 // default to 3 * sampling_rate
 #define DEFAULT_INPUT_BOOST_DURATION 90000
 #define DEFAULT_TOUCH_POKE_FREQ 910000
@@ -382,7 +379,6 @@ static inline void smartmax_dbs_timer_init(struct smartmax_info_s *this_smartmax
 		target_freq(this_smartmax->cur_policy, this_smartmax, boost_freq,
 				this_smartmax->cur_policy->cur, CPUFREQ_RELATION_H);
 	}
-
 	INIT_DELAYED_WORK_DEFERRABLE(&this_smartmax->work, smartmax_do_dbs_timer);
 	queue_delayed_work_on(this_smartmax->cpu, smartmax_wq, &this_smartmax->work, delay);
 }
@@ -583,7 +579,6 @@ static void cpufreq_smartmax_timer(struct smartmax_info_s *this_smartmax) {
 		} else
 			boost_running = false;
 	}
-
 	cpufreq_smartmax_freq_change(this_smartmax);
 }
 
@@ -617,11 +612,7 @@ static void update_idle_time(bool online) {
 				&j_this_smartmax->prev_cpu_wall, io_is_busy);
 
 		if (ignore_nice)
-#ifdef CONFIG_CPU_FREQ_GOV_SMARTMAX_30
-			j_this_smartmax->prev_cpu_nice = kstat_cpu(j) .cpustat.nice;
-#else
 			j_this_smartmax->prev_cpu_nice = kcpustat_cpu(j).cpustat[CPUTIME_NICE];
-#endif
 	}
 }
 
@@ -1285,6 +1276,7 @@ static int cpufreq_governor_smartmax(struct cpufreq_policy *new_policy,
 				mutex_unlock(&dbs_mutex);
 				return rc;
 			}
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 			register_early_suspend(&smartmax_early_suspend_handler);
 #endif
@@ -1410,7 +1402,6 @@ static int __init cpufreq_smartmax_init(void) {
 	smartmax_early_suspend_handler.resume = smartmax_late_resume;
 	smartmax_early_suspend_handler.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 100;
 #endif
-
 	return cpufreq_register_governor(&cpufreq_gov_smartmax);
 }
 
