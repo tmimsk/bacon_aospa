@@ -82,23 +82,6 @@ extern int tegra_input_boost (struct cpufreq_policy *policy,
 #define DEFAULT_IGNORE_NICE 1
 #endif
 
-#ifdef CONFIG_CPU_FREQ_GOV_SMARTMAX_MSM8974
-#define DEFAULT_SUSPEND_IDEAL_FREQ 652800
-#define DEFAULT_AWAKE_IDEAL_FREQ 652800
-#define DEFAULT_RAMP_UP_STEP 200000
-#define DEFAULT_RAMP_DOWN_STEP 200000
-#define DEFAULT_MAX_CPU_LOAD 57
-#define DEFAULT_MIN_CPU_LOAD 10
-#define DEFAULT_UP_RATE 30000
-#define DEFAULT_DOWN_RATE 70000
-#define DEFAULT_SAMPLING_RATE 38000
-#define DEFAULT_INPUT_BOOST_DURATION 130000
-#define DEFAULT_TOUCH_POKE_FREQ 1036800
-#define DEFAULT_BOOST_FREQ 1036800
-#define DEFAULT_IO_IS_BUSY 0
-#define DEFAULT_IGNORE_NICE 1
-#endif
-
 static unsigned int suspend_ideal_freq;
 static unsigned int awake_ideal_freq;
 /*
@@ -1384,7 +1367,7 @@ static int __init cpufreq_smartmax_init(void) {
 	io_is_busy = DEFAULT_IO_IS_BUSY;
 	ignore_nice = DEFAULT_IGNORE_NICE;
 	touch_poke_freq = DEFAULT_TOUCH_POKE_FREQ;
-	boost_freq = DEFAULT_BOOST_FREQ;
+
 
 	/* Initalize per-cpu data: */
 	for_each_possible_cpu(i)
